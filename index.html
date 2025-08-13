@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>货币交易计算工具</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --background-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-color: #2c3e50;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background-color: #e0e0e0;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+        }
+
+        .tab.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .tab:first-child {
+            margin-right: 5px;
+        }
+
+        .tab-content {
+            display: none;
+            background-color: var(--card-bg);
+            padding: 25px;
+            border-radius: 0 var(--border-radius) var(--border-radius) var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: rgba(46, 204, 113, 0.1);
+            border-left: 4px solid var(--secondary-color);
+            border-radius: var(--border-radius);
+        }
+
+        .process {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: rgba(52, 152, 219, 0.1);
+            border-radius: var(--border-radius);
+        }
+
+        .process h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+
+        .process-item {
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #ddd;
+        }
+
+        .process-item:last-child {
+            border-bottom: none;
+        }
+
+        .highlight {
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+
+        .note {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .tab {
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+            
+            .tab-content {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>货币交易计算工具</h1>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="openTab(event, 'profitTab')">计算交易收益</button>
+            <button class="tab" onclick="openTab(event, 'breakEvenTab')">计算不亏钱的买入价</button>
+        </div>
+        
+        <!-- 计算交易收益 -->
+        <div id="profitTab" class="tab-content active">
+            <div class="input-group">
+                <label for="principal">本金</label>
+                <input type="text" id="principal" placeholder="例如: 100000">
+            </div>
+            
+            <div class="input-group">
+                <label for="sellRate">银行卖出价</label>
+                <input type="text" id="sellRate" placeholder="例如: 146">
+            </div>
+            
+            <div class="input-group">
+                <label for="buyRate">银行买入价</label>
+                <input type="text" id="buyRate" placeholder="例如: 148">
+            </div>
+            
+            <div class="input-group">
+                <label for="commissionRate">佣金率 (%)</label>
+                <input type="text" id="commissionRate" placeholder="例如: 0.55">
+            </div>
+            
+            <button onclick="calculateProfit()">计算收益</button>
+            
+            <div id="profitResult" class="result" style="display: none;"></div>
+            <div id="profitProcess" class="process" style="display: none;"></div>
+        </div>
+        
+        <!-- 计算盈亏平衡点 -->
+        <div id="breakEvenTab" class="tab-content">
+            <div class="input-group">
+                <label for="bePrincipal">本金</label>
+                <input type="text" id="bePrincipal" placeholder="例如: 100000">
+            </div>
+            
+            <div class="input-group">
+                <label for="beSellRate">卖出价</label>
+                <input type="text" id="beSellRate" placeholder="例如: 146">
+            </div>
+            
+            <div class="input-group">
+                <label for="beCommissionRate">佣金率 (%)</label>
+                <input type="text" id="beCommissionRate" placeholder="例如: 0.55">
+            </div>
+            
+            <button onclick="calculateBreakEven()">计算不亏钱的买入价</button>
+            
+            <div id="breakEvenResult" class="result" style="display: none;"></div>
+            <div id="breakEvenProcess" class="process" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // 切换标签页
+        function openTab(evt, tabName) {
+            const tabContents = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove("active");
+            }
+            
+            const tabs = document.getElementsByClassName("tab");
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove("active");
+            }
+            
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+        
+        // 格式化数字
+        function formatNumber(num) {
+            return new Intl.NumberFormat('zh-CN', { 
+                minimumFractionDigits: 2, 
+                maximumFractionDigits: 4 
+            }).format(num);
+        }
+        
+        // 计算交易收益
+        function calculateProfit() {
+            // 获取输入值
+            const principal = parseFloat(document.getElementById("principal").value);
+            const sellRate = parseFloat(document.getElementById("sellRate").value);
+            const buyRate = parseFloat(document.getElementById("buyRate").value);
+            const commissionRate = parseFloat(document.getElementById("commissionRate").value) / 100;
+            
+            // 验证输入
+            if (principal === "" || sellRate === "" || buyRate === "" || commissionRate === "" || 
+                isNaN(principal) || isNaN(sellRate) || isNaN(buyRate) || isNaN(commissionRate)) {
+                alert("请填写所有字段，并确保输入有效的数字");
+                return;
+            }
+            
+            if (principal <= 0 || sellRate <= 0 || buyRate <= 0 || commissionRate < 0) {
+                alert("请输入有效的正数值");
+                return;
+            }
+            
+            // 计算过程
+            const jpyReceived = principal * sellRate;
+            const sellCommissionUSD = principal * commissionRate;
+            const sellCommissionJPY = sellCommissionUSD * sellRate;
+            
+            const usdBoughtBack = jpyReceived / buyRate;
+            const buyCommissionJPY = jpyReceived * commissionRate;
+            const buyCommissionUSD = buyCommissionJPY / buyRate;
+            
+            // 总收益 = 买回的USD - 原始本金 + 返还的佣金
+            const profit = usdBoughtBack - principal + sellCommissionUSD + buyCommissionUSD;
+            const profitPercentage = (profit / principal) * 100;
+            
+            // 显示结果
+            const resultDiv = document.getElementById("profitResult");
+            resultDiv.innerHTML = `
+                <h3>交易收益</h3>
+                <p>最终收益: <span class="highlight">${formatNumber(profit)}</span> (${formatNumber(profitPercentage)}%)</p>
+            `;
+            resultDiv.style.display = "block";
+            
+            // 显示计算过程
+            const processDiv = document.getElementById("profitProcess");
+            processDiv.innerHTML = `
+                <h3>计算过程</h3>
+                <div class="process-item">
+                    <p>1. 卖出本金获得外币:</p>
+                    <p>${formatNumber(principal)} × ${formatNumber(sellRate)} = <span class="highlight">${formatNumber(jpyReceived)}</span></p>
+                </div>
+                <div class="process-item">
+                    <p>2. 卖出本金的佣金:</p>
+                    <p>${formatNumber(principal)} × ${formatNumber(commissionRate * 100)}% = <span class="highlight">${formatNumber(sellCommissionUSD)}</span></p>
+                    <p>佣金等值: ${formatNumber(sellCommissionUSD)} × ${formatNumber(sellRate)} = <span class="highlight">${formatNumber(sellCommissionJPY)}</span></p>
+                </div>
+                <div class="process-item">
+                    <p>3. 用外币买回本金:</p>
+                    <p>${formatNumber(jpyReceived)} ÷ ${formatNumber(buyRate)} = <span class="highlight">${formatNumber(usdBoughtBack)}</span></p>
+                </div>
+                <div class="process-item">
+                    <p>4. 买回本金的佣金:</p>
+                    <p>${formatNumber(jpyReceived)} × ${formatNumber(commissionRate * 100)}% = <span class="highlight">${formatNumber(buyCommissionJPY)}</span></p>
+                    <p>佣金等值: ${formatNumber(buyCommissionJPY)} ÷ ${formatNumber(buyRate)} = <span class="highlight">${formatNumber(buyCommissionUSD)}</span></p>
+                </div>
+                <div class="process-item">
+                    <p>5. 总收益计算:</p>
+                    <p>买回的本金: ${formatNumber(usdBoughtBack)}</p>
+                    <p>- 原始本金: ${formatNumber(principal)}</p>
+                    <p>+ 卖出佣金返还: ${formatNumber(sellCommissionUSD)}</p>
+                    <p>+ 买入佣金返还: ${formatNumber(buyCommissionUSD)}</p>
+                    <p>= 总收益: <span class="highlight">${formatNumber(profit)}</span> (${formatNumber(profitPercentage)}%)</p>
+                </div>
+            `;
+            processDiv.style.display = "block";
+        }
+        
+        // 计算不亏钱的买入价
+        function calculateBreakEven() {
+            // 获取输入值
+            const principal = parseFloat(document.getElementById("bePrincipal").value);
+            const sellRate = parseFloat(document.getElementById("beSellRate").value);
+            const commissionRate = parseFloat(document.getElementById("beCommissionRate").value) / 100;
+            
+            // 验证输入
+            if (principal === "" || sellRate === "" || commissionRate === "" ||
+                isNaN(principal) || isNaN(sellRate) || isNaN(commissionRate)) {
+                alert("请填写所有字段，并确保输入有效的数字");
+                return;
+            }
+            
+            if (principal <= 0 || sellRate <= 0 || commissionRate < 0) {
+                alert("请输入有效的正数值");
+                return;
+            }
+            
+            // 计算不亏钱的买入价
+            // 设定利润为0，解方程：
+            // principal * sellRate / buyRate - principal + principal * commissionRate + principal * sellRate * commissionRate / buyRate = 0
+            // 解出 buyRate
+            
+            const breakEvenRate = (sellRate * (1 + commissionRate)) / (1 - commissionRate);
+            
+            // 验证计算结果
+            const jpyReceived = principal * sellRate;
+            const sellCommissionUSD = principal * commissionRate;
+            const usdBoughtBack = jpyReceived / breakEvenRate;
+            const buyCommissionJPY = jpyReceived * commissionRate;
+            const buyCommissionUSD = buyCommissionJPY / breakEvenRate;
+            const profit = usdBoughtBack - principal + sellCommissionUSD + buyCommissionUSD;
+            
+            // 显示结果
+            const resultDiv = document.getElementById("breakEvenResult");
+            resultDiv.innerHTML = `
+                <h3>不亏钱的买入价</h3>
+                <p>不亏损的最高买入价: <span class="highlight">${formatNumber(breakEvenRate)}</span></p>
+            `;
+            resultDiv.style.display = "block";
+            
+            // 显示计算过程
+            const processDiv = document.getElementById("breakEvenProcess");
+            processDiv.innerHTML = `
+                <h3>计算过程</h3>
+                <div class="process-item">
+                    <p>1. 设定盈亏平衡条件 (利润 = 0):</p>
+                    <p>买回的本金 - 原始本金 + 返还的佣金 = 0</p>
+                </div>
+                <div class="process-item">
+                    <p>2. 代入公式:</p>
+                    <p>(本金 × 卖出价 ÷ 买入价) - 本金 + (本金 × 佣金率) + (本金 × 卖出价 × 佣金率 ÷ 买入价) = 0</p>
+                </div>
+                <div class="process-item">
+                    <p>3. 求解买入价:</p>
+                    <p>买入价 = (卖出价 × (1 + 佣金率)) ÷ (1 - 佣金率)</p>
+                    <p>买入价 = (${formatNumber(sellRate)} × (1 + ${formatNumber(commissionRate)})) ÷ (1 - ${formatNumber(commissionRate)})</p>
+                    <p>买入价 = <span class="highlight">${formatNumber(breakEvenRate)}</span></p>
+                </div>
+                <div class="process-item">
+                    <p>4. 验证计算结果:</p>
+                    <p>卖出本金获得外币: ${formatNumber(principal)} × ${formatNumber(sellRate)} = ${formatNumber(jpyReceived)}</p>
+                    <p>卖出本金的佣金: ${formatNumber(principal)} × ${formatNumber(commissionRate * 100)}% = ${formatNumber(sellCommissionUSD)}</p>
+                    <p>用外币买回本金: ${formatNumber(jpyReceived)} ÷ ${formatNumber(breakEvenRate)} = ${formatNumber(usdBoughtBack)}</p>
+                    <p>买回本金的佣金: ${formatNumber(jpyReceived)} × ${formatNumber(commissionRate * 100)}% = ${formatNumber(buyCommissionJPY)} (${formatNumber(buyCommissionUSD)})</p>
+                    <p>总收益: ${formatNumber(usdBoughtBack)} - ${formatNumber(principal)} + ${formatNumber(sellCommissionUSD)} + ${formatNumber(buyCommissionUSD)} = ${formatNumber(profit)}</p>
+                    <p>收益约为 ${formatNumber(profit)}，接近于 0，验证计算正确</p>
+                </div>
+            `;
+            processDiv.style.display = "block";
+        }
+    </script>
+</body>
+</html>
