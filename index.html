@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>货币交易计算工具</title>
+    <title>Nono放心赚</title>
     <style>
         :root {
             --primary-color: #3498db;
@@ -149,6 +149,71 @@
             color: #7f8c8d;
             margin-top: 5px;
         }
+        
+        /* 报价模式切换样式 */
+        .mode-switch {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: rgba(52, 152, 219, 0.1);
+            border-radius: var(--border-radius);
+        }
+        
+        .mode-switch label {
+            margin-bottom: 0;
+            margin-right: 10px;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 30px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: var(--primary-color);
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(30px);
+        }
+        
+        .mode-label {
+            margin-left: 10px;
+            font-weight: normal;
+        }
 
         @media (max-width: 768px) {
             .container {
@@ -168,7 +233,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>货币交易计算工具</h1>
+        <h1>Nono放心赚</h1>
         
         <div class="tabs">
             <button class="tab active" onclick="openTab(event, 'profitTab')">计算交易收益</button>
@@ -177,6 +242,15 @@
         
         <!-- 计算交易收益 -->
         <div id="profitTab" class="tab-content active">
+            <div class="mode-switch">
+                <label>报价模式:</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="profitModeToggle" onchange="toggleProfitMode()">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="mode-label" id="profitModeLabel">直接报价 (如: USD/JPY)</span>
+            </div>
+            
             <div class="input-group">
                 <label for="principal">本金</label>
                 <input type="text" id="principal" placeholder="例如: 100000">
@@ -205,6 +279,15 @@
         
         <!-- 计算盈亏平衡点 -->
         <div id="breakEvenTab" class="tab-content">
+            <div class="mode-switch">
+                <label>报价模式:</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="breakEvenModeToggle" onchange="toggleBreakEvenMode()">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="mode-label" id="breakEvenModeLabel">直接报价 (如: USD/JPY)</span>
+            </div>
+            
             <div class="input-group">
                 <label for="bePrincipal">本金</label>
                 <input type="text" id="bePrincipal" placeholder="例如: 100000">
@@ -228,6 +311,10 @@
     </div>
 
     <script>
+        // 全局变量，存储当前报价模式
+        let isProfitIndirectMode = false;
+        let isBreakEvenIndirectMode = false;
+        
         // 切换标签页
         function openTab(evt, tabName) {
             const tabContents = document.getElementsByClassName("tab-content");
@@ -244,6 +331,83 @@
             evt.currentTarget.classList.add("active");
         }
         
+        // 切换交易收益计算的报价模式
+        function toggleProfitMode() {
+            isProfitIndirectMode = document.getElementById("profitModeToggle").checked;
+            const modeLabel = document.getElementById("profitModeLabel");
+            const sellRateInput = document.getElementById("sellRate");
+            const buyRateInput = document.getElementById("buyRate");
+            
+            if (isProfitIndirectMode) {
+                modeLabel.textContent = "间接报价 (如: JPY/USD)";
+                
+                // 如果输入框有值，将其转换为间接报价
+                if (sellRateInput.value && !isNaN(parseFloat(sellRateInput.value)) && parseFloat(sellRateInput.value) !== 0) {
+                    sellRateInput.value = (1 / parseFloat(sellRateInput.value)).toFixed(6);
+                }
+                
+                if (buyRateInput.value && !isNaN(parseFloat(buyRateInput.value)) && parseFloat(buyRateInput.value) !== 0) {
+                    buyRateInput.value = (1 / parseFloat(buyRateInput.value)).toFixed(6);
+                }
+                
+                // 更新占位符
+                sellRateInput.placeholder = "例如: 0.00685";
+                buyRateInput.placeholder = "例如: 0.00676";
+            } else {
+                modeLabel.textContent = "直接报价 (如: USD/JPY)";
+                
+                // 如果输入框有值，将其转换为直接报价
+                if (sellRateInput.value && !isNaN(parseFloat(sellRateInput.value)) && parseFloat(sellRateInput.value) !== 0) {
+                    sellRateInput.value = (1 / parseFloat(sellRateInput.value)).toFixed(2);
+                }
+                
+                if (buyRateInput.value && !isNaN(parseFloat(buyRateInput.value)) && parseFloat(buyRateInput.value) !== 0) {
+                    buyRateInput.value = (1 / parseFloat(buyRateInput.value)).toFixed(2);
+                }
+                
+                // 更新占位符
+                sellRateInput.placeholder = "例如: 146";
+                buyRateInput.placeholder = "例如: 148";
+            }
+            
+            // 清除结果显示
+            document.getElementById("profitResult").style.display = "none";
+            document.getElementById("profitProcess").style.display = "none";
+        }
+        
+        // 切换盈亏平衡点计算的报价模式
+        function toggleBreakEvenMode() {
+            isBreakEvenIndirectMode = document.getElementById("breakEvenModeToggle").checked;
+            const modeLabel = document.getElementById("breakEvenModeLabel");
+            const sellRateInput = document.getElementById("beSellRate");
+            
+            if (isBreakEvenIndirectMode) {
+                modeLabel.textContent = "间接报价 (如: JPY/USD)";
+                
+                // 如果输入框有值，将其转换为间接报价
+                if (sellRateInput.value && !isNaN(parseFloat(sellRateInput.value)) && parseFloat(sellRateInput.value) !== 0) {
+                    sellRateInput.value = (1 / parseFloat(sellRateInput.value)).toFixed(6);
+                }
+                
+                // 更新占位符
+                sellRateInput.placeholder = "例如: 0.00685";
+            } else {
+                modeLabel.textContent = "直接报价 (如: USD/JPY)";
+                
+                // 如果输入框有值，将其转换为直接报价
+                if (sellRateInput.value && !isNaN(parseFloat(sellRateInput.value)) && parseFloat(sellRateInput.value) !== 0) {
+                    sellRateInput.value = (1 / parseFloat(sellRateInput.value)).toFixed(2);
+                }
+                
+                // 更新占位符
+                sellRateInput.placeholder = "例如: 146";
+            }
+            
+            // 清除结果显示
+            document.getElementById("breakEvenResult").style.display = "none";
+            document.getElementById("breakEvenProcess").style.display = "none";
+        }
+        
         // 格式化数字
         function formatNumber(num) {
             return new Intl.NumberFormat('zh-CN', { 
@@ -256,8 +420,8 @@
         function calculateProfit() {
             // 获取输入值
             const principal = parseFloat(document.getElementById("principal").value);
-            const sellRate = parseFloat(document.getElementById("sellRate").value);
-            const buyRate = parseFloat(document.getElementById("buyRate").value);
+            let sellRate = parseFloat(document.getElementById("sellRate").value);
+            let buyRate = parseFloat(document.getElementById("buyRate").value);
             const commissionRate = parseFloat(document.getElementById("commissionRate").value) / 100;
             
             // 验证输入
@@ -270,6 +434,15 @@
             if (principal <= 0 || sellRate <= 0 || buyRate <= 0 || commissionRate < 0) {
                 alert("请输入有效的正数值");
                 return;
+            }
+            
+            // 如果是间接报价模式，转换为直接报价进行计算
+            let displaySellRate = sellRate;
+            let displayBuyRate = buyRate;
+            
+            if (isProfitIndirectMode) {
+                sellRate = 1 / sellRate;
+                buyRate = 1 / buyRate;
             }
             
             // 计算过程
@@ -295,35 +468,73 @@
             
             // 显示计算过程
             const processDiv = document.getElementById("profitProcess");
-            processDiv.innerHTML = `
-                <h3>计算过程</h3>
-                <div class="process-item">
-                    <p>1. 卖出本金获得外币:</p>
-                    <p>${formatNumber(principal)} × ${formatNumber(sellRate)} = <span class="highlight">${formatNumber(jpyReceived)}</span></p>
-                </div>
-                <div class="process-item">
-                    <p>2. 卖出本金的佣金:</p>
-                    <p>${formatNumber(principal)} × ${formatNumber(commissionRate * 100)}% = <span class="highlight">${formatNumber(sellCommissionUSD)}</span></p>
-                    <p>佣金等值: ${formatNumber(sellCommissionUSD)} × ${formatNumber(sellRate)} = <span class="highlight">${formatNumber(sellCommissionJPY)}</span></p>
-                </div>
-                <div class="process-item">
-                    <p>3. 用外币买回本金:</p>
-                    <p>${formatNumber(jpyReceived)} ÷ ${formatNumber(buyRate)} = <span class="highlight">${formatNumber(usdBoughtBack)}</span></p>
-                </div>
-                <div class="process-item">
-                    <p>4. 买回本金的佣金:</p>
-                    <p>${formatNumber(jpyReceived)} × ${formatNumber(commissionRate * 100)}% = <span class="highlight">${formatNumber(buyCommissionJPY)}</span></p>
-                    <p>佣金等值: ${formatNumber(buyCommissionJPY)} ÷ ${formatNumber(buyRate)} = <span class="highlight">${formatNumber(buyCommissionUSD)}</span></p>
-                </div>
-                <div class="process-item">
-                    <p>5. 总收益计算:</p>
-                    <p>买回的本金: ${formatNumber(usdBoughtBack)}</p>
-                    <p>- 原始本金: ${formatNumber(principal)}</p>
-                    <p>+ 卖出佣金返还: ${formatNumber(sellCommissionUSD)}</p>
-                    <p>+ 买入佣金返还: ${formatNumber(buyCommissionUSD)}</p>
-                    <p>= 总收益: <span class="highlight">${formatNumber(profit)}</span> (${formatNumber(profitPercentage)}%)</p>
-                </div>
-            `;
+            
+            if (isProfitIndirectMode) {
+                processDiv.innerHTML = `
+                    <h3>计算过程 (间接报价模式)</h3>
+                    <div class="process-item">
+                        <p>0. 转换报价 (用于计算):</p>
+                        <p>卖出价: ${formatNumber(displaySellRate)} → ${formatNumber(sellRate)}</p>
+                        <p>买入价: ${formatNumber(displayBuyRate)} → ${formatNumber(buyRate)}</p>
+                    </div>
+                    <div class="process-item">
+                        <p>1. 卖出本金获得外币:</p>
+                        <p>${formatNumber(principal)} × ${formatNumber(sellRate)} = <span class="highlight">${formatNumber(jpyReceived)}</span></p>
+                    </div>
+                    <div class="process-item">
+                        <p>2. 卖出本金的佣金:</p>
+                        <p>${formatNumber(principal)} × ${formatNumber(commissionRate * 100)}% = <span class="highlight">${formatNumber(sellCommissionUSD)}</span></p>
+                        <p>佣金等值: ${formatNumber(sellCommissionUSD)} × ${formatNumber(sellRate)} = <span class="highlight">${formatNumber(sellCommissionJPY)}</span></p>
+                    </div>
+                    <div class="process-item">
+                        <p>3. 用外币买回本金:</p>
+                        <p>${formatNumber(jpyReceived)} ÷ ${formatNumber(buyRate)} = <span class="highlight">${formatNumber(usdBoughtBack)}</span></p>
+                    </div>
+                    <div class="process-item">
+                        <p>4. 买回本金的佣金:</p>
+                        <p>${formatNumber(jpyReceived)} × ${formatNumber(commissionRate * 100)}% = <span class="highlight">${formatNumber(buyCommissionJPY)}</span></p>
+                        <p>佣金等值: ${formatNumber(buyCommissionJPY)} ÷ ${formatNumber(buyRate)} = <span class="highlight">${formatNumber(buyCommissionUSD)}</span></p>
+                    </div>
+                    <div class="process-item">
+                        <p>5. 总收益计算:</p>
+                        <p>买回的本金: ${formatNumber(usdBoughtBack)}</p>
+                        <p>- 原始本金: ${formatNumber(principal)}</p>
+                        <p>+ 卖出佣金返还: ${formatNumber(sellCommissionUSD)}</p>
+                        <p>+ 买入佣金返还: ${formatNumber(buyCommissionUSD)}</p>
+                        <p>= 总收益: <span class="highlight">${formatNumber(profit)}</span> (${formatNumber(profitPercentage)}%)</p>
+                    </div>
+                `;
+            } else {
+                processDiv.innerHTML = `
+                    <h3>计算过程</h3>
+                    <div class="process-item">
+                        <p>1. 卖出本金获得外币:</p>
+                        <p>${formatNumber(principal)} × ${formatNumber(sellRate)} = <span class="highlight">${formatNumber(jpyReceived)}</span></p>
+                    </div>
+                    <div class="process-item">
+                        <p>2. 卖出本金的佣金:</p>
+                        <p>${formatNumber(principal)} × ${formatNumber(commissionRate * 100)}% = <span class="highlight">${formatNumber(sellCommissionUSD)}</span></p>
+                        <p>佣金等值: ${formatNumber(sellCommissionUSD)} × ${formatNumber(sellRate)} = <span class="highlight">${formatNumber(sellCommissionJPY)}</span></p>
+                    </div>
+                    <div class="process-item">
+                        <p>3. 用外币买回本金:</p>
+                        <p>${formatNumber(jpyReceived)} ÷ ${formatNumber(buyRate)} = <span class="highlight">${formatNumber(usdBoughtBack)}</span></p>
+                    </div>
+                    <div class="process-item">
+                        <p>4. 买回本金的佣金:</p>
+                        <p>${formatNumber(jpyReceived)} × ${formatNumber(commissionRate * 100)}% = <span class="highlight">${formatNumber(buyCommissionJPY)}</span></p>
+                        <p>佣金等值: ${formatNumber(buyCommissionJPY)} ÷ ${formatNumber(buyRate)} = <span class="highlight">${formatNumber(buyCommissionUSD)}</span></p>
+                    </div>
+                    <div class="process-item">
+                        <p>5. 总收益计算:</p>
+                        <p>买回的本金: ${formatNumber(usdBoughtBack)}</p>
+                        <p>- 原始本金: ${formatNumber(principal)}</p>
+                        <p>+ 卖出佣金返还: ${formatNumber(sellCommissionUSD)}</p>
+                        <p>+ 买入佣金返还: ${formatNumber(buyCommissionUSD)}</p>
+                        <p>= 总收益: <span class="highlight">${formatNumber(profit)}</span> (${formatNumber(profitPercentage)}%)</p>
+                    </div>
+                `;
+            }
             processDiv.style.display = "block";
         }
         
@@ -331,7 +542,7 @@
         function calculateBreakEven() {
             // 获取输入值
             const principal = parseFloat(document.getElementById("bePrincipal").value);
-            const sellRate = parseFloat(document.getElementById("beSellRate").value);
+            let sellRate = parseFloat(document.getElementById("beSellRate").value);
             const commissionRate = parseFloat(document.getElementById("beCommissionRate").value) / 100;
             
             // 验证输入
@@ -346,12 +557,25 @@
                 return;
             }
             
+            // 如果是间接报价模式，转换为直接报价进行计算
+            let displaySellRate = sellRate;
+            
+            if (isBreakEvenIndirectMode) {
+                sellRate = 1 / sellRate;
+            }
+            
             // 计算不亏钱的买入价
             // 设定利润为0，解方程：
             // principal * sellRate / buyRate - principal + principal * commissionRate + principal * sellRate * commissionRate / buyRate = 0
             // 解出 buyRate
             
-            const breakEvenRate = (sellRate * (1 + commissionRate)) / (1 - commissionRate);
+            let breakEvenRate = (sellRate * (1 + commissionRate)) / (1 - commissionRate);
+            let displayBreakEvenRate = breakEvenRate;
+            
+            // 如果是间接报价模式，转换结果为间接报价
+            if (isBreakEvenIndirectMode) {
+                displayBreakEvenRate = 1 / breakEvenRate;
+            }
             
             // 验证计算结果
             const jpyReceived = principal * sellRate;
@@ -363,40 +587,84 @@
             
             // 显示结果
             const resultDiv = document.getElementById("breakEvenResult");
-            resultDiv.innerHTML = `
-                <h3>不亏钱的买入价</h3>
-                <p>不亏损的最高买入价: <span class="highlight">${formatNumber(breakEvenRate)}</span></p>
-            `;
+            
+            if (isBreakEvenIndirectMode) {
+                resultDiv.innerHTML = `
+                    <h3>不亏钱的买入价 (间接报价)</h3>
+                    <p>不亏损的最低买入价: <span class="highlight">${formatNumber(displayBreakEvenRate)}</span></p>
+                `;
+            } else {
+                resultDiv.innerHTML = `
+                    <h3>不亏钱的买入价</h3>
+                    <p>不亏损的最高买入价: <span class="highlight">${formatNumber(breakEvenRate)}</span></p>
+                `;
+            }
+            
             resultDiv.style.display = "block";
             
             // 显示计算过程
             const processDiv = document.getElementById("breakEvenProcess");
-            processDiv.innerHTML = `
-                <h3>计算过程</h3>
-                <div class="process-item">
-                    <p>1. 设定盈亏平衡条件 (利润 = 0):</p>
-                    <p>买回的本金 - 原始本金 + 返还的佣金 = 0</p>
-                </div>
-                <div class="process-item">
-                    <p>2. 代入公式:</p>
-                    <p>(本金 × 卖出价 ÷ 买入价) - 本金 + (本金 × 佣金率) + (本金 × 卖出价 × 佣金率 ÷ 买入价) = 0</p>
-                </div>
-                <div class="process-item">
-                    <p>3. 求解买入价:</p>
-                    <p>买入价 = (卖出价 × (1 + 佣金率)) ÷ (1 - 佣金率)</p>
-                    <p>买入价 = (${formatNumber(sellRate)} × (1 + ${formatNumber(commissionRate)})) ÷ (1 - ${formatNumber(commissionRate)})</p>
-                    <p>买入价 = <span class="highlight">${formatNumber(breakEvenRate)}</span></p>
-                </div>
-                <div class="process-item">
-                    <p>4. 验证计算结果:</p>
-                    <p>卖出本金获得外币: ${formatNumber(principal)} × ${formatNumber(sellRate)} = ${formatNumber(jpyReceived)}</p>
-                    <p>卖出本金的佣金: ${formatNumber(principal)} × ${formatNumber(commissionRate * 100)}% = ${formatNumber(sellCommissionUSD)}</p>
-                    <p>用外币买回本金: ${formatNumber(jpyReceived)} ÷ ${formatNumber(breakEvenRate)} = ${formatNumber(usdBoughtBack)}</p>
-                    <p>买回本金的佣金: ${formatNumber(jpyReceived)} × ${formatNumber(commissionRate * 100)}% = ${formatNumber(buyCommissionJPY)} (${formatNumber(buyCommissionUSD)})</p>
-                    <p>总收益: ${formatNumber(usdBoughtBack)} - ${formatNumber(principal)} + ${formatNumber(sellCommissionUSD)} + ${formatNumber(buyCommissionUSD)} = ${formatNumber(profit)}</p>
-                    <p>收益约为 ${formatNumber(profit)}，接近于 0，验证计算正确</p>
-                </div>
-            `;
+            
+            if (isBreakEvenIndirectMode) {
+                processDiv.innerHTML = `
+                    <h3>计算过程 (间接报价模式)</h3>
+                    <div class="process-item">
+                        <p>0. 转换报价 (用于计算):</p>
+                        <p>卖出价: ${formatNumber(displaySellRate)} → ${formatNumber(sellRate)}</p>
+                    </div>
+                    <div class="process-item">
+                        <p>1. 设定盈亏平衡条件 (利润 = 0):</p>
+                        <p>买回的本金 - 原始本金 + 返还的佣金 = 0</p>
+                    </div>
+                    <div class="process-item">
+                        <p>2. 代入公式:</p>
+                        <p>(本金 × 卖出价 ÷ 买入价) - 本金 + (本金 × 佣金率) + (本金 × 卖出价 × 佣金率 ÷ 买入价) = 0</p>
+                    </div>
+                    <div class="process-item">
+                        <p>3. 求解买入价:</p>
+                        <p>买入价 = (卖出价 × (1 + 佣金率)) ÷ (1 - 佣金率)</p>
+                        <p>买入价 = (${formatNumber(sellRate)} × (1 + ${formatNumber(commissionRate)})) ÷ (1 - ${formatNumber(commissionRate)})</p>
+                        <p>买入价 = ${formatNumber(breakEvenRate)}</p>
+                        <p>转换为间接报价: 1 ÷ ${formatNumber(breakEvenRate)} = <span class="highlight">${formatNumber(displayBreakEvenRate)}</span></p>
+                    </div>
+                    <div class="process-item">
+                        <p>4. 验证计算结果:</p>
+                        <p>卖出本金获得外币: ${formatNumber(principal)} × ${formatNumber(sellRate)} = ${formatNumber(jpyReceived)}</p>
+                        <p>卖出本金的佣金: ${formatNumber(principal)} × ${formatNumber(commissionRate * 100)}% = ${formatNumber(sellCommissionUSD)}</p>
+                        <p>用外币买回本金: ${formatNumber(jpyReceived)} ÷ ${formatNumber(breakEvenRate)} = ${formatNumber(usdBoughtBack)}</p>
+                        <p>买回本金的佣金: ${formatNumber(jpyReceived)} × ${formatNumber(commissionRate * 100)}% = ${formatNumber(buyCommissionJPY)} (${formatNumber(buyCommissionUSD)})</p>
+                        <p>总收益: ${formatNumber(usdBoughtBack)} - ${formatNumber(principal)} + ${formatNumber(sellCommissionUSD)} + ${formatNumber(buyCommissionUSD)} = ${formatNumber(profit)}</p>
+                        <p>收益约为 ${formatNumber(profit)}，接近于 0，验证计算正确</p>
+                    </div>
+                `;
+            } else {
+                processDiv.innerHTML = `
+                    <h3>计算过程</h3>
+                    <div class="process-item">
+                        <p>1. 设定盈亏平衡条件 (利润 = 0):</p>
+                        <p>买回的本金 - 原始本金 + 返还的佣金 = 0</p>
+                    </div>
+                    <div class="process-item">
+                        <p>2. 代入公式:</p>
+                        <p>(本金 × 卖出价 ÷ 买入价) - 本金 + (本金 × 佣金率) + (本金 × 卖出价 × 佣金率 ÷ 买入价) = 0</p>
+                    </div>
+                    <div class="process-item">
+                        <p>3. 求解买入价:</p>
+                        <p>买入价 = (卖出价 × (1 + 佣金率)) ÷ (1 - 佣金率)</p>
+                        <p>买入价 = (${formatNumber(sellRate)} × (1 + ${formatNumber(commissionRate)})) ÷ (1 - ${formatNumber(commissionRate)})</p>
+                        <p>买入价 = <span class="highlight">${formatNumber(breakEvenRate)}</span></p>
+                    </div>
+                    <div class="process-item">
+                        <p>4. 验证计算结果:</p>
+                        <p>卖出本金获得外币: ${formatNumber(principal)} × ${formatNumber(sellRate)} = ${formatNumber(jpyReceived)}</p>
+                        <p>卖出本金的佣金: ${formatNumber(principal)} × ${formatNumber(commissionRate * 100)}% = ${formatNumber(sellCommissionUSD)}</p>
+                        <p>用外币买回本金: ${formatNumber(jpyReceived)} ÷ ${formatNumber(breakEvenRate)} = ${formatNumber(usdBoughtBack)}</p>
+                        <p>买回本金的佣金: ${formatNumber(jpyReceived)} × ${formatNumber(commissionRate * 100)}% = ${formatNumber(buyCommissionJPY)} (${formatNumber(buyCommissionUSD)})</p>
+                        <p>总收益: ${formatNumber(usdBoughtBack)} - ${formatNumber(principal)} + ${formatNumber(sellCommissionUSD)} + ${formatNumber(buyCommissionUSD)} = ${formatNumber(profit)}</p>
+                        <p>收益约为 ${formatNumber(profit)}，接近于 0，验证计算正确</p>
+                    </div>
+                `;
+            }
             processDiv.style.display = "block";
         }
     </script>
